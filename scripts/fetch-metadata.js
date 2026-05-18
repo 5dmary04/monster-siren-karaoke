@@ -23,7 +23,7 @@ async function get(path) {
 function detectLanguage(lrcText) {
   if (!lrcText) return 'unknown'
   // Only analyse timestamped lyric lines.
-  const CREDIT_RE = /作词|作曲|演唱|鹰角网络/
+  const CREDIT_RE = /(?:词|曲|作词|作曲|演唱|编曲|吉他|混音|母带|监制|录音|和声|人声|主唱|制作人?|弦乐|钢琴|贝斯|配乐)[：:]|鹰角网络|版权|©/
   const stamped = lrcText.replace(/\r/g, '').split('\n')
     .filter(l => /^\[\d+:\d+/.test(l))
     .filter(l => !CREDIT_RE.test(l))   // drop production-credit lines wherever they appear

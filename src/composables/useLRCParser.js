@@ -13,10 +13,11 @@ export function parseLRC(raw) {
   return lines.sort((a, b) => a.time - b.time)
 }
 
-// Returns the index of the active line for a given currentTime.
+// Returns the index of the active line for a given currentTime, or -1 if before the first line.
 // Uses binary search for efficiency.
 export function findActiveLine(lines, currentTime) {
   if (!lines.length) return -1
+  if (currentTime < lines[0].time) return -1
   let lo = 0, hi = lines.length - 1, result = 0
   while (lo <= hi) {
     const mid = (lo + hi) >> 1

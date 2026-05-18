@@ -5,61 +5,56 @@
     <nav class="top-bar">
       <button class="back-btn" @click="$router.back()">← Back</button>
       <div class="top-info">
-        <span class="album-name">{{ song?.albumName ?? '' }}</span>
+        <span class="album-name">{{ store.currentSong?.albumName ?? '' }}</span>
       </div>
+      <button class="mode-btn" @click="store.setMode(store.mode === 'karaoke' ? 'listening' : 'karaoke')">
+        {{ store.mode === 'karaoke' ? '🎤 Karaoke' : '🎧 Listening' }}
+      </button>
     </nav>
 
-    <div v-if="loadingDetail" class="center-state">Loading…</div>
-    <div v-else-if="detailError" class="center-state error">{{ detailError }}</div>
+    <div v-if="store.loadingDetail" class="center-state">Loading…</div>
+    <div v-else-if="store.detailError" class="center-state error">{{ store.detailError }}</div>
 
     <template v-else>
       <div class="lyrics-area">
         <LyricDisplay
-          :lines="parsedLyrics"
-          :activeLine="activeLine"
-          @seek="seekTo"
+          v-if="store.mode === 'karaoke'"
+          :lines="store.parsedLyrics"
+          :activeLine="store.activeLine"
+          @seek="store.seekTo"
         />
+        <div v-else class="listening-placeholder">
+          <p>🎧 Listening mode</p>
+          <p class="sub">Repeat & playlist controls coming soon</p>
+        </div>
       </div>
 
       <footer class="controls-footer">
         <AudioControls
-          :song="song"
-          :playing="playing"
-          :currentTime="currentTime"
-          :duration="duration"
-          :volume="volume"
-          :hasInstrumental="!!instrumentalCid"
-          :instrumentalMode="usingInstrumental"
+          :song="store.currentSong"
+          :playing="store.playing"
+          :currentTime="store.currentTime"
+          :duration="store.duration"
+          :volume="store.volume"
+          :hasInstrumental="!!store.instrumentalCid"
+          :instrumentalMode="store.usingInstrumental"
           :isFullscreen="isFullscreen"
-          v-model:volume="volume"
-          @toggle="togglePlay"
-          @seek="seekTo"
-          @toggleInstrumental="toggleInstrumental"
+          v-model:volume="storeVolume"
+          @toggle="store.togglePlay()"
+          @seek="store.seekTo"
+          @toggleInstrumental="store.toggleInstrumental()"
           @fullscreen="toggleFullscreen"
         />
       </footer>
     </template>
-
-    <audio
-      ref="audioEl"
-      :src="audioSrc"
-      :volume="volume"
-      @play="playing = true"
-      @pause="playing = false"
-      @ended="playing = false"
-      @durationchange="duration = audioEl?.duration ?? 0"
-      @canplay="tryAutoplay"
-    />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { fetchSong, fetchLRC } from '@/api/msr'
+import { usePlayerStore } from '@/stores/player'
 import { useCatalog } from '@/composables/useCatalog'
-import { useKaraokeSync } from '@/composables/useKaraokeSync'
-import { parseLRC } from '@/composables/useLRCParser'
 import LyricDisplay from '@/components/LyricDisplay.vue'
 import AudioControls from '@/components/AudioControls.vue'
 
@@ -67,110 +62,23 @@ const props = defineProps({ cid: String })
 const route = useRoute()
 const cid = computed(() => props.cid ?? route.params.cid)
 
-// DOM refs
-const playerEl = ref(null)
-const audioEl = ref(null)
-
-// State
-const song = ref(null)
-const lrcText = ref('')
-const loadingDetail = ref(true)
-const detailError = ref(null)
-const playing = ref(false)
-const duration = ref(0)
-const volume = ref(1)
-const usingInstrumental = ref(false)
-const isFullscreen = ref(false)
-
-// Pre-fetched instrumental/vocal data so the toggle feels instant
-const prefetchCache = ref({})  // cid → { detail, lrcText }
-
-// Catalog access (for cover art, album name, instrumental pairing).
-// load() is safe to call multiple times — it no-ops if already loaded.
-const { songs, load: loadCatalog } = useCatalog()
+const store = usePlayerStore()
+const { load: loadCatalog } = useCatalog()
 onMounted(loadCatalog)
 
-const instrumentalCid = computed(() => song.value?.pairedCid ?? null)
-
-const audioSrc = computed(() => {
-  if (!song.value) return ''
-  return song.value.sourceUrl ?? ''
+// Two-way volume binding for AudioControls v-model
+const storeVolume = computed({
+  get: () => store.volume,
+  set: v => store.setVolume(v),
 })
 
-// Karaoke sync
-const parsedLyrics = computed(() => parseLRC(lrcText.value))
-const { activeLine, currentTime } = useKaraokeSync(audioEl, parsedLyrics)
+const playerEl = ref(null)
+const isFullscreen = ref(false)
 
-// Album cover for background
 const bgStyle = computed(() => {
-  const url = song.value?.coverUrl
+  const url = store.currentSong?.coverUrl
   return url ? { '--cover-url': `url(${url})` } : {}
 })
-
-async function fetchSongData(id) {
-  if (prefetchCache.value[id]) return prefetchCache.value[id]
-  const detail = await fetchSong(id)
-  const text = detail.lyricUrl ? await fetchLRC(detail.lyricUrl) : ''
-  const cached = { detail, lrcText: text }
-  prefetchCache.value[id] = cached
-  return cached
-}
-
-async function loadSong(id, { silent = false } = {}) {
-  if (!silent) {
-    loadingDetail.value = true
-    detailError.value = null
-    lrcText.value = ''
-  }
-  try {
-    const { detail, lrcText: text } = await fetchSongData(id)
-    const catalogEntry = songs.value.find(s => s.cid === id)
-    song.value = { ...detail, albumName: catalogEntry?.albumName ?? '', coverUrl: catalogEntry?.coverUrl ?? '', pairedCid: catalogEntry?.pairedCid ?? null }
-    lrcText.value = text
-  } catch (e) {
-    detailError.value = e.message
-  } finally {
-    loadingDetail.value = false
-  }
-}
-
-// After a song loads, silently pre-fetch its instrumental/vocal pair in background
-watch(instrumentalCid, (pairedCid) => {
-  if (pairedCid && !prefetchCache.value[pairedCid]) {
-    fetchSongData(pairedCid).catch(() => {})
-  }
-})
-
-function tryAutoplay() {
-  audioEl.value?.play().catch(() => {})
-}
-
-function togglePlay() {
-  if (!audioEl.value) return
-  if (playing.value) { audioEl.value.pause() } else { audioEl.value.play() }
-}
-
-function seekTo(time) {
-  if (!audioEl.value) return
-  audioEl.value.currentTime = time
-}
-
-async function toggleInstrumental() {
-  if (!instrumentalCid.value) return
-  usingInstrumental.value = !usingInstrumental.value
-  const targetCid = usingInstrumental.value ? instrumentalCid.value : cid.value
-  const wasPlaying = playing.value
-  const savedTime = audioEl.value?.currentTime ?? 0
-  const savedLrcText = lrcText.value  // preserve vocal lyrics as fallback
-  // Use silent mode — data is pre-fetched so this resolves from cache instantly
-  await loadSong(targetCid, { silent: true })
-  // Instrumental tracks often have no lyrics; keep the vocal version's lyrics
-  if (!lrcText.value) lrcText.value = savedLrcText
-  if (audioEl.value) {
-    audioEl.value.currentTime = savedTime
-    if (wasPlaying) audioEl.value.play().catch(() => {})
-  }
-}
 
 function toggleFullscreen() {
   if (!document.fullscreenElement) {
@@ -186,9 +94,9 @@ function onFullscreenChange() {
 
 function onKeydown(e) {
   if (e.target.tagName === 'INPUT') return
-  if (e.code === 'Space') { e.preventDefault(); togglePlay() }
-  if (e.code === 'ArrowLeft') seekTo(Math.max(0, currentTime.value - 5))
-  if (e.code === 'ArrowRight') seekTo(Math.min(duration.value, currentTime.value + 5))
+  if (e.code === 'Space') { e.preventDefault(); store.togglePlay() }
+  if (e.code === 'ArrowLeft') store.seekTo(Math.max(0, store.currentTime - 5))
+  if (e.code === 'ArrowRight') store.seekTo(Math.min(store.duration, store.currentTime + 5))
   if (e.code === 'KeyF') toggleFullscreen()
 }
 
@@ -199,17 +107,16 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeydown)
   document.removeEventListener('fullscreenchange', onFullscreenChange)
-  audioEl.value?.pause()
+  // Audio keeps playing — do NOT pause here
 })
 
-watch(cid, id => { if (id) loadSong(id) }, { immediate: true })
-watch(volume, v => { if (audioEl.value) audioEl.value.volume = v })
+watch(cid, id => { if (id) store.playSong(id) }, { immediate: true })
 </script>
 
 <style scoped>
 .player {
   position: relative;
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -232,16 +139,24 @@ watch(volume, v => { if (audioEl.value) audioEl.value.volume = v })
   z-index: 1;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .back-btn {
   background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #fff;
   border-radius: 6px; padding: 0.35rem 0.75rem; cursor: pointer; font-size: 0.85rem;
+  flex-shrink: 0;
 }
 .back-btn:hover { background: rgba(255,255,255,0.08); }
+.top-info { flex: 1; min-width: 0; }
 .album-name { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
+.mode-btn {
+  background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7);
+  border-radius: 6px; padding: 0.35rem 0.75rem; cursor: pointer; font-size: 0.82rem;
+  flex-shrink: 0; transition: all 0.15s;
+}
+.mode-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 .lyrics-area {
   position: relative;
@@ -249,6 +164,14 @@ watch(volume, v => { if (audioEl.value) audioEl.value.volume = v })
   flex: 1;
   overflow: hidden;
 }
+
+.listening-placeholder {
+  height: 100%; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0.5rem;
+  color: rgba(255,255,255,0.4);
+}
+.listening-placeholder p { margin: 0; font-size: 1.5rem; }
+.listening-placeholder .sub { font-size: 0.85rem; }
 
 .controls-footer {
   position: relative;

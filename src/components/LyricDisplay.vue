@@ -3,6 +3,11 @@
     <p v-if="!lines.length" class="empty">♪ No lyrics available</p>
     <template v-else>
       <p
+        class="lyric-line lyric-dots"
+        :class="{ active: activeLine === -1 }"
+        @click="$emit('seek', lines[0].time)"
+      >· · ·</p>
+      <p
         v-for="(line, i) in lines"
         :key="i"
         :ref="el => { if (el) lineEls[i] = el }"

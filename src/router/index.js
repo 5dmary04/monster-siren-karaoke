@@ -6,6 +6,6 @@ export default createRouter({
   history: createWebHashHistory(),
   routes: [
     { path: '/', component: BrowseView },
-    { path: '/play/:cid', component: PlayerView, props: true },
+    { path: '/play/:cid', name: 'player', component: PlayerView, props: true },
   ],
 })
