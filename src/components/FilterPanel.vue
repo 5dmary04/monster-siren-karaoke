@@ -23,14 +23,6 @@
       </div>
     </div>
 
-    <div class="field" v-if="availableYears.length">
-      <label class="field-label">Year</label>
-      <select class="year-select" :value="selectedYear" @change="$emit('update:selectedYear', $event.target.value ? Number($event.target.value) : null)">
-        <option value="">All years</option>
-        <option v-for="y in availableYears" :key="y" :value="y">{{ y }}</option>
-      </select>
-    </div>
-
     <div class="field">
       <label class="field-label">Show</label>
       <div class="chips">
@@ -50,10 +42,8 @@ import { computed } from 'vue'
 const props = defineProps({
   query: String,
   selectedLanguages: Array,
-  selectedYear: [Number, null],
-  availableYears: Array,
 })
-const emit = defineEmits(['update:query', 'update:selectedLanguages', 'update:selectedYear', 'clear'])
+const emit = defineEmits(['update:query', 'update:selectedLanguages', 'clear'])
 
 const LANGUAGES = [
   { value: 'chinese', label: '中文' },
@@ -84,7 +74,7 @@ const isVocalOnly = computed(() =>
 )
 
 const hasFilters = computed(() =>
-  props.query.trim() || props.selectedLanguages.length || props.selectedYear
+  props.query.trim() || props.selectedLanguages.length
 )
 </script>
 
@@ -106,11 +96,6 @@ const hasFilters = computed(() =>
   cursor: pointer; transition: all 0.15s;
 }
 .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-.year-select {
-  background: var(--input-bg); border: 1px solid var(--border); color: var(--text);
-  border-radius: 8px; padding: 0.45rem 0.65rem; font-size: 0.88rem; outline: none;
-}
-.year-select:focus { border-color: var(--accent); }
 .clear-btn {
   align-self: flex-start; padding: 0.35rem 0.8rem; border-radius: 6px;
   border: 1px solid var(--border); background: transparent; color: var(--text-muted);

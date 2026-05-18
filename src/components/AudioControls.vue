@@ -37,7 +37,9 @@
       <button v-if="hasInstrumental" class="ctrl-btn instrumental-toggle" :class="{ active: instrumentalMode }" @click="$emit('toggleInstrumental')" title="Toggle vocal / instrumental">
         {{ instrumentalMode ? '🎵 Inst.' : '🎤 Vocal' }}
       </button>
-      <button class="ctrl-btn" @click="$emit('fullscreen')" title="Fullscreen (F)">⛶</button>
+      <button class="ctrl-btn fs-btn" :class="{ active: isFullscreen }" @click="$emit('fullscreen')" :title="isFullscreen ? 'Exit fullscreen (F)' : 'Fullscreen (F)'">
+        {{ isFullscreen ? '⊡' : '⛶' }}
+      </button>
     </div>
   </div>
 </template>
@@ -51,6 +53,7 @@ defineProps({
   volume: Number,
   hasInstrumental: Boolean,
   instrumentalMode: Boolean,
+  isFullscreen: Boolean,
 })
 defineEmits(['toggle', 'seek', 'update:volume', 'toggleInstrumental', 'fullscreen'])
 
@@ -93,11 +96,20 @@ function fmt(s) {
   transition: background 0.15s;
 }
 .ctrl-btn:hover { background: var(--card-bg); }
-.play-btn { font-size: 1.4rem; padding: 0.2rem 0.8rem; border-color: var(--accent); color: var(--accent); }
+.play-btn {
+  font-size: 1.4rem; border-color: var(--accent); color: var(--accent);
+  width: 3rem; height: 2.4rem; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+}
 .instrumental-toggle.active { border-color: var(--accent); color: var(--accent); }
+.fs-btn.active { border-color: var(--accent); color: var(--accent); }
 
 @media (max-width: 700px) {
-  .audio-controls { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+  .audio-controls { grid-template-columns: 1fr; gap: 0.4rem; padding: 0.6rem 1rem; }
   .center-controls { min-width: unset; width: 100%; }
+  .track-info { display: none; }
+  .right-controls { justify-content: center; flex-wrap: wrap; }
+  .vol-label { display: none; }
+  .vol-bar { width: 60px; }
 }
 </style>

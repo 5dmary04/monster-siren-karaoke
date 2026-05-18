@@ -9,8 +9,6 @@
       <FilterPanel
         v-model:query="query"
         v-model:selectedLanguages="selectedLanguages"
-        v-model:selectedYear="selectedYear"
-        :availableYears="availableYears"
         @clear="clearFilters"
       />
 
@@ -47,7 +45,7 @@ import SongCard from '@/components/SongCard.vue'
 const router = useRouter()
 const {
   loading, error,
-  query, selectedLanguages, selectedYear, availableYears,
+  query, selectedLanguages,
   filtered, load,
 } = useCatalog()
 
@@ -60,7 +58,6 @@ function goPlay(song) {
 function clearFilters() {
   query.value = ''
   selectedLanguages.value = []
-  selectedYear.value = null
 }
 </script>
 

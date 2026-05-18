@@ -199,19 +199,80 @@ Clicking any lyric line seeks audio to that line's timestamp.
 
 ## Verification Checklist
 
+Run `npm run dev` and go through each section in order.
+
+### 1. Startup & Catalog
 - [ ] `npm run dev` starts without errors
-- [ ] Browse view loads catalog from MSR API (check network tab)
-- [ ] Search filters songs by title/artist/album instantly
-- [ ] Language filter chips correctly separate Chinese / Russian / English songs
+- [ ] Browse view loads catalog — result count shows ~500+ songs
+- [ ] Album cover images load (cover art appears in song cards)
+
+### 2. Search
+- [ ] Search "don't miss it" — finds the song instantly (no network call)
+- [ ] Search by artist name (e.g. "PREWVY") narrows the list
+- [ ] Search by album name (e.g. "Lingering Remnants") finds songs from that album
+- [ ] Clearing the search box restores full list
+
+### 3. Language Filter
+- [ ] Select **中文** — shows Chinese songs only; "Don't Miss It" (Russian) does NOT appear
+- [ ] Confirm "in your blue eyes" does NOT appear under 中文 (it's Japanese)
+- [ ] Select **Русский** — "Don't Miss It" and other Russian songs appear
+- [ ] Select **日本語** — "in your blue eyes" and other Japanese songs appear
+- [ ] Select **粤語** — shows Cantonese-tagged songs (Yanking/花街迎春/Missy)
+- [ ] Select **閩南語** — shows 浸春芜 and its instrumental pair
+- [ ] Select **Latin** — shows 冬涤 and Mare Natus
+- [ ] Select **Instrumental** — shows only instrumental-tagged songs
+- [ ] Select **No Lyrics** — shows songs without a lyric file
+- [ ] No-lyrics songs do NOT appear when only language chips (中文 etc.) are selected
+
+### 4. Year Filter
+- [ ] Year dropdown shows years in descending order
+- [ ] Selecting a year filters to that release year; combining with language filter works
+
+### 5. Filter Persistence (back navigation)
+- [ ] Set a language filter, click any song, press browser Back
+- [ ] Filter is still active on return — same chips highlighted, same songs shown
+- [ ] Search text and year filter also persist on back navigation
+
+### 6. Song Cards & Badges
+- [ ] Chinese songs show badge "中文", Russian "Русский", Japanese "日本語"
+- [ ] Cantonese songs show "粤語", Hokkien "閩南語", Latin "Latin"
+- [ ] Instrumental songs show badge "Instrumental" (purple-ish color)
+- [ ] No-lyrics songs show NO language badge
+
+### 7. Player Load
 - [ ] Clicking a song navigates to `/play/:cid`
-- [ ] "Don't Miss It" (cid: `232223`) plays audio and shows scrolling lyrics
-- [ ] Active lyric line auto-scrolls to center
-- [ ] Clicking a lyric line seeks the audio to that timestamp
-- [ ] Instrumental toggle switches audio track (songs that have a pair)
-- [ ] Keyboard shortcuts work (Space, ←, →, F)
-- [ ] Back button returns to browse (with scroll position preserved ideally)
-- [ ] GitHub Pages deploy: all assets load under `/monster-siren-karaoke/` base path
-- [ ] Mobile: lyrics readable, controls usable on touch
+- [ ] Album art appears as blurred background; song title and artist display correctly
+- [ ] Audio starts playing (or play button works)
+
+### 8. Audio Playback
+- [ ] Play/pause, seek bar, ±5s buttons, volume slider all work
+- [ ] Audio plays to end without interruption
+
+### 9. Lyrics Display & Sync
+- [ ] Open "Don't Miss It" — lyrics appear in Russian (not Chinese or garbled)
+- [ ] Active lyric line auto-scrolls to center as song progresses
+- [ ] Past lines dimmed, active line highlighted (accent color, larger)
+- [ ] Clicking a lyric line seeks audio to that timestamp
+- [ ] Production credit lines do NOT appear (no 作词/作曲 lines)
+
+### 10. Instrumental Toggle
+- [ ] Open a vocal song with a pair (e.g. Closure, 浸春芜) — toggle button visible
+- [ ] Toggle switches to instrumental; playback position preserved
+- [ ] Toggle back to vocal works
+- [ ] Open an instrumental song directly — toggle switches to vocal pair
+- [ ] Song without a pair — no toggle button shown
+
+### 11. No-Lyrics Songs
+- [ ] "No lyrics available" shown (no crash, no blank screen)
+
+### 12. Keyboard Shortcuts
+- [ ] Space = play/pause, ← = back 5s, → = forward 5s, F = fullscreen
+- [ ] Shortcuts do NOT fire when typing in the search box
+
+### 13. Fullscreen & Mobile
+- [ ] Fullscreen button and F key work; Esc exits
+- [ ] On narrow screen (< 640px): filter panel stacks above grid
+- [ ] Player lyrics readable on phone-sized screen
 
 ---
 

@@ -9,13 +9,16 @@ All songs from the Monster Siren Records catalog are loaded on startup directly 
 The search box matches against song title, artist name, and album name simultaneously. Partial matches work (e.g. "don't" finds "Don't Miss It").
 
 **Language filter**
-Songs can be filtered by detected language: Chinese, English, Russian, Japanese. Detection is based on the character set of each song's lyrics file. Songs without lyrics are labelled "No Lyrics"; purely instrumental tracks are labelled "Instrumental".
+Songs can be filtered by detected language: 中文 (Chinese), 粤語 (Cantonese), 閩南語 (Hokkien), English, Русский (Russian), 日本語 (Japanese), Latin. Detection is based on the character set of each song's lyrics file, with per-song analysis so mixed-language albums are correctly separated. Songs without lyrics are labelled "No Lyrics"; purely instrumental tracks are labelled "Instrumental". Cantonese and Hokkien are secondary sublanguages — selecting them shows only those songs, not all Chinese songs.
 
 **Year filter**
 Songs can be filtered by approximate release year, derived from album release ordering. Select a year from the dropdown to show only that year's releases.
 
 **Clear filters**
 A "Clear filters" button appears whenever any filter is active, resetting all search and filter fields at once.
+
+**Filter persistence**
+Filter state (language chips, search text, year) is preserved when you open a song and press Back — you return to exactly the same filtered view without having to re-select anything.
 
 ---
 

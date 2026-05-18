@@ -30,6 +30,7 @@
           :volume="volume"
           :hasInstrumental="!!instrumentalCid"
           :instrumentalMode="usingInstrumental"
+          :isFullscreen="isFullscreen"
           v-model:volume="volume"
           @toggle="togglePlay"
           @seek="seekTo"
@@ -79,6 +80,7 @@ const playing = ref(false)
 const duration = ref(0)
 const volume = ref(1)
 const usingInstrumental = ref(false)
+const isFullscreen = ref(false)
 
 // Pre-fetched instrumental/vocal data so the toggle feels instant
 const prefetchCache = ref({})  // cid → { detail, lrcText }
@@ -178,6 +180,10 @@ function toggleFullscreen() {
   }
 }
 
+function onFullscreenChange() {
+  isFullscreen.value = !!document.fullscreenElement
+}
+
 function onKeydown(e) {
   if (e.target.tagName === 'INPUT') return
   if (e.code === 'Space') { e.preventDefault(); togglePlay() }
@@ -188,9 +194,11 @@ function onKeydown(e) {
 
 onMounted(() => {
   window.addEventListener('keydown', onKeydown)
+  document.addEventListener('fullscreenchange', onFullscreenChange)
 })
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeydown)
+  document.removeEventListener('fullscreenchange', onFullscreenChange)
   audioEl.value?.pause()
 })
 

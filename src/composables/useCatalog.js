@@ -12,7 +12,6 @@ let loaded = false
 // Filter state at module level so it survives navigation away and back.
 const query = ref('')
 const selectedLanguages = ref([])
-const selectedYear = ref(null)
 
 export function useCatalog() {
   async function load() {
@@ -68,21 +67,13 @@ export function useCatalog() {
         (s.sublanguage && selectedLanguages.value.includes(s.sublanguage))
       )
     }
-    if (selectedYear.value) {
-      list = list.filter(s => s.year === selectedYear.value)
-    }
     return list
-  })
-
-  const availableYears = computed(() => {
-    const years = [...new Set(songs.value.map(s => s.year).filter(Boolean))]
-    return years.sort((a, b) => b - a)
   })
 
   return {
     songs, albums, albumMap, loading, error,
-    query, selectedLanguages, selectedYear,
-    filtered, availableYears,
+    query, selectedLanguages,
+    filtered,
     load,
   }
 }
