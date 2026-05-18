@@ -1,4 +1,4 @@
-const BASE = '/msr-api'
+const BASE = import.meta.env.VITE_API_BASE ?? '/msr-api'
 
 async function get(path) {
   const res = await fetch(`${BASE}${path}`, {
