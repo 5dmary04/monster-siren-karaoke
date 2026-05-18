@@ -21,7 +21,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
 
 const props = defineProps({
   lines: { type: Array, default: () => [] },
@@ -42,6 +42,13 @@ function scrollToEl(el, smooth = false) {
   const target = relativeTop - container.clientHeight / 2 + elRect.height / 2
   container.scrollTo({ top: target, behavior: smooth ? 'smooth' : 'instant' })
 }
+
+// On mount, scroll to wherever the active line already is (song may be mid-play).
+onMounted(() => nextTick(() => {
+  const idx = props.activeLine
+  if (idx < 0) scrollToEl(dotsEl.value)
+  else scrollToEl(lineEls[idx])
+}))
 
 // When lyrics change (new song), center dots if activeLine is already -1.
 watch(() => props.lines, () => {
