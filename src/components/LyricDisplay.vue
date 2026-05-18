@@ -3,6 +3,7 @@
     <p v-if="!lines.length" class="empty">♪ No lyrics available</p>
     <template v-else>
       <p
+        ref="dotsEl"
         class="lyric-line lyric-dots"
         :class="{ active: activeLine === -1 }"
         @click="$emit('seek', lines[0].time)"
@@ -29,12 +30,31 @@ const props = defineProps({
 defineEmits(['seek'])
 
 const containerEl = ref(null)
+const dotsEl = ref(null)
 const lineEls = []   // plain array — no reactivity needed, just DOM refs
 
+function scrollToEl(el, smooth = false) {
+  const container = containerEl.value
+  if (!el || !container) return
+  const elRect = el.getBoundingClientRect()
+  const cRect = container.getBoundingClientRect()
+  const relativeTop = elRect.top - cRect.top + container.scrollTop
+  const target = relativeTop - container.clientHeight / 2 + elRect.height / 2
+  container.scrollTo({ top: target, behavior: smooth ? 'smooth' : 'instant' })
+}
+
+// When lyrics change (new song), center dots if activeLine is already -1.
+watch(() => props.lines, () => {
+  nextTick(() => {
+    if (props.activeLine < 0) scrollToEl(dotsEl.value)
+  })
+}, { flush: 'post' })
+
+// During playback, follow the active line; center dots when before first lyric.
 watch(() => props.activeLine, async idx => {
-  if (idx < 0) return
   await nextTick()
-  lineEls[idx]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  if (idx < 0) { scrollToEl(dotsEl.value); return }
+  scrollToEl(lineEls[idx], true)
 })
 </script>
 
@@ -42,7 +62,7 @@ watch(() => props.activeLine, async idx => {
 .lyric-display {
   height: 100%;
   overflow-y: scroll;
-  padding: 40% 1rem;
+  padding: 40vh 1rem;
   box-sizing: border-box;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.2) transparent;

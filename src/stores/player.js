@@ -61,10 +61,10 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  async function playSong(id) {
+  async function playSong(id, { autoplay = true } = {}) {
     loadingDetail.value = true
     detailError.value = null
-    shouldAutoplay.value = true
+    shouldAutoplay.value = autoplay
     try {
       // Look up catalog entry early so we know pairedCid before any await
       const catalogEntry = catalog.songs.value.find(s => s.cid === id)
