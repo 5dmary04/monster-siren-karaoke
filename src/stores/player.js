@@ -20,6 +20,7 @@ export const usePlayerStore = defineStore('player', () => {
   const usingInstrumental = ref(false)
   const shouldAutoplay = ref(false)
   const pendingSeekTime = ref(null)  // applied in onCanPlay after new src loads
+  const switchStartTime = ref(null)  // performance.now() at toggleInstrumental click; enables lag compensation
   const loadingDetail = ref(false)
   const detailError = ref(null)
 
@@ -106,6 +107,7 @@ export const usePlayerStore = defineStore('player', () => {
     usingInstrumental.value = !usingInstrumental.value
     shouldAutoplay.value = wasPlaying
     pendingSeekTime.value = savedTime  // applied in onCanPlay after new src loads
+    switchStartTime.value = performance.now()  // lap timer: canplay handler adds elapsed to seek target
     try {
       const { detail, lrcText: text } = await _fetchSongData(targetCid)
       currentSong.value = _mergeCatalog(detail, targetCid)
@@ -113,6 +115,8 @@ export const usePlayerStore = defineStore('player', () => {
     } catch {
       usingInstrumental.value = !usingInstrumental.value
       shouldAutoplay.value = false
+      pendingSeekTime.value = null
+      switchStartTime.value = null
     }
   }
 
@@ -139,7 +143,7 @@ export const usePlayerStore = defineStore('player', () => {
 
   return {
     audioRef, currentSong, playing, volume, currentTime, duration,
-    lrcText, usingInstrumental, shouldAutoplay, pendingSeekTime, loadingDetail, detailError,
+    lrcText, usingInstrumental, shouldAutoplay, pendingSeekTime, switchStartTime, loadingDetail, detailError,
     mode, prefetchCache,
     audioSrc, pairedAudioSrc, hasSong, parsedLyrics, activeLine, instrumentalCid,
     setAudioRef, playSong, toggleInstrumental, seekTo, togglePlay, setVolume, setMode,
