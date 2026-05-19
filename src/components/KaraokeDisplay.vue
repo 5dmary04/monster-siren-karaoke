@@ -9,7 +9,7 @@
         @click="$emit('seek', lines[slotALine].time)"
       >
         <span class="lyric-bg">{{ lines[slotALine].text }}</span>
-        <span v-if="slotASinging" ref="fillA" class="lyric-fill" :style="fillState">{{ lines[slotALine].text }}</span>
+        <span v-if="slotASinging" ref="fillA" class="lyric-fill">{{ lines[slotALine].text }}</span>
       </div>
     </div>
 
@@ -21,7 +21,7 @@
         @click="$emit('seek', lines[slotBLine].time)"
       >
         <span class="lyric-bg">{{ lines[slotBLine].text }}</span>
-        <span v-if="slotBSinging" ref="fillB" class="lyric-fill" :style="fillState">{{ lines[slotBLine].text }}</span>
+        <span v-if="slotBSinging" ref="fillB" class="lyric-fill">{{ lines[slotBLine].text }}</span>
       </div>
     </div>
 
@@ -41,13 +41,19 @@ const props = defineProps({
 })
 defineEmits(['seek'])
 
-// Bound to both .lyric-fill spans so animation-play-state mirrors audio state
-const fillState = computed(() => ({
-  animationPlayState: props.playing ? 'running' : 'paused',
-}))
-
 const fillA = ref(null)
 const fillB = ref(null)
+
+// Directly set animationPlayState on both fills whenever playing changes.
+// We don't use Vue's :style binding for this because the activeLine watcher
+// restarts the animation inside a requestAnimationFrame, and relying on Vue's
+// reactive DOM flush to have already applied animationPlayState by that point
+// creates a timing race that causes the sweep to run briefly while paused.
+watch(() => props.playing, (isPlaying) => {
+  const state = isPlaying ? 'running' : 'paused'
+  if (fillA.value) fillA.value.style.animationPlayState = state
+  if (fillB.value) fillB.value.style.animationPlayState = state
+})
 
 // ── Slot logic ───────────────────────────────────────────────────────────────
 
@@ -91,7 +97,12 @@ watch(() => props.activeLine, async idx => {
   el.style.animationName = 'none'
   el.style.setProperty('--line-dur',   `${dur}s`)
   el.style.setProperty('--line-delay', `-${elapsed}s`)
-  requestAnimationFrame(() => { el.style.animationName = '' })
+  requestAnimationFrame(() => {
+    el.style.animationName = ''
+    // Set play-state in the same frame as the animation restart so there is no
+    // window where the animation runs while audio is paused.
+    el.style.animationPlayState = props.playing ? 'running' : 'paused'
+  })
 })
 </script>
 

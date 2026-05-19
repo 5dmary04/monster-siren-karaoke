@@ -19,7 +19,8 @@ export const usePlayerStore = defineStore('player', () => {
   const lrcText = ref('')
   const usingInstrumental = ref(false)
   const shouldAutoplay = ref(false)
-  const pendingSeekTime = ref(null)  // applied in onCanPlay after new src loads
+  const pendingSeekTime = ref(null)   // applied in onCanPlay after new src loads
+  const switchStartTime = ref(null)   // performance.now() at toggle click; useAudioEngine adds elapsed to seek target
   const loadingDetail = ref(false)
   const detailError = ref(null)
 
@@ -118,9 +119,10 @@ export const usePlayerStore = defineStore('player', () => {
 
     // Freeze display time now so activeLine / KaraokeDisplay don't flicker during src swap
     currentTime.value = savedTime
-    usingInstrumental.value = !usingInstrumental.value  // audioSrc recomputes from cache
+    usingInstrumental.value = !usingInstrumental.value  // audioSrc recomputes from cache (sync)
     shouldAutoplay.value = wasPlaying
-    pendingSeekTime.value = savedTime  // applied in onCanPlay once new src is ready
+    pendingSeekTime.value = savedTime   // applied in onCanPlay once new src is ready
+    switchStartTime.value = performance.now()  // onCanPlay adds elapsed → compensates load lag
     // currentSong and lrcText are intentionally left unchanged — display stays the same
   }
 
@@ -147,7 +149,7 @@ export const usePlayerStore = defineStore('player', () => {
 
   return {
     audioRef, currentSong, playing, volume, currentTime, duration,
-    lrcText, usingInstrumental, shouldAutoplay, pendingSeekTime, loadingDetail, detailError,
+    lrcText, usingInstrumental, shouldAutoplay, pendingSeekTime, switchStartTime, loadingDetail, detailError,
     mode, prefetchCache,
     audioSrc, pairedAudioSrc, hasSong, parsedLyrics, activeLine, instrumentalCid,
     setAudioRef, playSong, toggleInstrumental, seekTo, togglePlay, setVolume, setMode,

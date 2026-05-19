@@ -5,7 +5,8 @@ import { usePlayerStore } from '@/stores/player'
 // Called once from App.vue. Wires audio element events → player store.
 export function useAudioEngine() {
   const store = usePlayerStore()
-  const { audioRef, currentTime, playing, duration, shouldAutoplay, pendingSeekTime, volume } = storeToRefs(store)
+  const { audioRef, currentTime, playing, duration, shouldAutoplay, pendingSeekTime, switchStartTime, volume } = storeToRefs(store)
+  const MAX_COMPENSATION_S = 3
 
   let attached = null
 
@@ -22,7 +23,15 @@ export function useAudioEngine() {
   function onDurationChange() { duration.value = attached?.duration ?? 0 }
   function onCanPlay() {
     if (pendingSeekTime.value !== null) {
-      attached.currentTime = pendingSeekTime.value
+      let target = pendingSeekTime.value
+      if (switchStartTime.value !== null) {
+        // Add time elapsed since the toggle click so playback resumes where the
+        // song would have been, not where it was when the user clicked.
+        const elapsed = (performance.now() - switchStartTime.value) / 1000
+        target += Math.min(elapsed, MAX_COMPENSATION_S)
+        switchStartTime.value = null
+      }
+      attached.currentTime = target
       pendingSeekTime.value = null
     }
     if (shouldAutoplay.value) {
