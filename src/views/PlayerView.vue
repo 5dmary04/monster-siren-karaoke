@@ -56,8 +56,12 @@
       </footer>
     </template>
 
-    <!-- Style panel — always visible, works in both modes -->
-    <div class="style-panel">
+    <!-- Style panel — collapsible, works in both modes -->
+    <div class="style-panel" :class="{ collapsed: !panelOpen }">
+      <button class="panel-toggle" @click="panelOpen = !panelOpen">
+        🎨<span v-if="panelOpen"> ✕</span>
+      </button>
+      <template v-if="panelOpen">
       <div class="panel-title">Lyric Style</div>
 
       <div class="panel-label">Theme</div>
@@ -109,6 +113,7 @@
         <input type="range" min="1.2" max="4" step="0.1" v-model.number="fontSize" />
         <span class="hex">{{ fontSize }}rem</span>
       </label>
+      </template>
     </div>
 
   </div>
@@ -143,6 +148,7 @@ const storeVolume = computed({
 const playerEl  = ref(null)
 const isFullscreen = ref(false)
 const bgBlurred = ref(true)
+const panelOpen = ref(false)
 
 const bgStyle = computed(() => {
   const url = store.currentSong?.coverUrl
@@ -264,7 +270,33 @@ watch(cid, id => { if (id) store.playSong(id) }, { immediate: true })
   gap: 0.5rem;
   z-index: 10;
   backdrop-filter: blur(10px);
+  transition: width 0.2s, padding 0.2s;
 }
+.style-panel.collapsed {
+  width: auto;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  backdrop-filter: none;
+}
+.panel-toggle {
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 1.1rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  transition: background 0.15s;
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+.panel-toggle:hover { background: rgba(0,0,0,0.7); }
 .panel-title {
   font-size: 0.72rem;
   font-weight: 700;
