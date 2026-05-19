@@ -1233,7 +1233,13 @@
   "_overrides": {
     "461127": "latin",
     "461198": "latin",
-    "880317": "spanish"
+    "880317": "spanish",
+    "514572": "russian",
+    "125007": "english",
+    "461161": "english",
+    "880360": "english",
+    "697652": "english",
+    "779407": "latin"
   },
   "_songSublangs": {
     "306808": "cantonese",

@@ -93,7 +93,7 @@ watch(() => props.activeLine, async idx => {
 .lyric-line:hover { color: var(--text); }
 .lyric-line.past { color: #555; }
 .lyric-line.active {
-  color: var(--accent);
+  color: var(--k-sweep, var(--accent));
   font-size: 1.55rem;
   font-weight: 700;
   transform: scale(1.04);

@@ -19,8 +19,13 @@
       <button class="ctrl-btn" @click="store.seekTo(Math.min(store.duration, store.currentTime + 5))" title="Forward 5s">5s ⏭</button>
     </div>
 
-    <!-- Right: volume + open-player -->
+    <!-- Right: mode toggle + volume + open-player -->
     <div class="mini-right">
+      <button
+        class="ctrl-btn mode-toggle"
+        :title="store.mode === 'karaoke' ? 'Karaoke mode — click to switch to Listening' : 'Listening mode — click to switch to Karaoke'"
+        @click="store.setMode(store.mode === 'karaoke' ? 'listening' : 'karaoke')"
+      >{{ store.mode === 'karaoke' ? '🎤 Karaoke' : '📜 Listening' }}</button>
       <span class="vol-icon">🔊</span>
       <input class="vol-bar" type="range" min="0" max="1" step="0.02"
         :value="store.volume" @input="store.setVolume(Number($event.target.value))" />

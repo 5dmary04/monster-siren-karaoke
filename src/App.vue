@@ -3,7 +3,7 @@
     <RouterView />
     <MiniPlayer v-if="showMini" />
     <audio ref="audioEl" :src="store.audioSrc" preload="auto" style="display:none" />
-    <audio :src="store.pairedAudioSrc" preload="auto" style="display:none" />
+    <audio v-if="store.mode === 'karaoke'" :src="store.pairedAudioSrc" preload="auto" style="display:none" />
   </div>
 </template>
 

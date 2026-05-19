@@ -23,8 +23,8 @@ export const usePlayerStore = defineStore('player', () => {
   const loadingDetail = ref(false)
   const detailError = ref(null)
 
-  // Mode: 'karaoke' (scrolling lyrics + vocal/inst toggle) or 'listening' (future: repeat/playlist)
-  const mode = ref('karaoke')
+  // Mode: 'karaoke' or 'listening' — persisted to localStorage so it survives page reloads
+  const mode = ref(localStorage.getItem('playerMode') ?? 'karaoke')
 
   // Survives navigation so back→player feels instant
   const prefetchCache = ref({})
@@ -76,10 +76,12 @@ export const usePlayerStore = defineStore('player', () => {
       const catalogEntry = catalog.songs.value.find(s => s.cid === id)
       const pairedCid = catalogEntry?.pairedCid ?? null
 
-      // Fetch this song and its pair in parallel — eliminates first-toggle lag
+      // In karaoke mode prefetch both vocal and instrumental so toggle is instant.
+      // In listening mode skip the paired track to avoid unnecessary network load.
+      const loadPair = mode.value === 'karaoke' && pairedCid
       const [{ detail, lrcText: text }, pairedData] = await Promise.all([
         _fetchSongData(id),
-        pairedCid ? _fetchSongData(pairedCid) : Promise.resolve(null),
+        loadPair ? _fetchSongData(pairedCid) : Promise.resolve(null),
       ])
 
       currentSong.value = _mergeCatalog(detail, id)
@@ -132,6 +134,7 @@ export const usePlayerStore = defineStore('player', () => {
 
   function setMode(m) {
     mode.value = m
+    localStorage.setItem('playerMode', m)
   }
 
   return {

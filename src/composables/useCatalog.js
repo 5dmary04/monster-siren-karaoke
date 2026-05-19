@@ -28,10 +28,12 @@ export function useCatalog() {
       const pairs = metaRaw._pairs ?? {}
       const songLangs = metaRaw._songLangs ?? {}
       const songSublangs = metaRaw._songSublangs ?? {}
+      const overrides = metaRaw._overrides ?? {}
       songs.value = (songsData.list ?? songsData).map(s => {
         const meta = metaRaw[s.albumCid] ?? {}
         const isInstrumental = /instrumental/i.test(s.name)
-        const language = isInstrumental ? 'instrumental' : (songLangs[s.cid] ?? 'no-lyrics')
+        // _overrides takes priority over auto-detected _songLangs
+        const language = isInstrumental ? 'instrumental' : (overrides[s.cid] ?? songLangs[s.cid] ?? 'no-lyrics')
         return {
           ...s,
           albumName: albumMap.value[s.albumCid]?.name ?? '',
