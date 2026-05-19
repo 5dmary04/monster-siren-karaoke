@@ -30,7 +30,15 @@ export const usePlayerStore = defineStore('player', () => {
   const prefetchCache = ref({})
 
   // Computed
-  const audioSrc = computed(() => currentSong.value?.sourceUrl ?? '')
+  // When usingInstrumental, pull the sourceUrl directly from the prefetch cache so
+  // currentSong never has to change during a vocal↔instrumental toggle.
+  const audioSrc = computed(() => {
+    if (usingInstrumental.value && instrumentalCid.value) {
+      const cached = prefetchCache.value[instrumentalCid.value]
+      if (cached?.detail?.sourceUrl) return cached.detail.sourceUrl
+    }
+    return currentSong.value?.sourceUrl ?? ''
+  })
   const hasSong = computed(() => !!currentSong.value)
   const parsedLyrics = computed(() => parseLRC(lrcText.value))
   const activeLine = computed(() => findActiveLine(parsedLyrics.value, currentTime.value))
@@ -102,18 +110,18 @@ export const usePlayerStore = defineStore('player', () => {
     if (!targetCid) return
     const wasPlaying = playing.value
     const savedTime = audioRef.value?.currentTime ?? 0
-    const savedLrc = lrcText.value
-    usingInstrumental.value = !usingInstrumental.value
-    shouldAutoplay.value = wasPlaying
-    pendingSeekTime.value = savedTime  // applied in onCanPlay after new src loads
-    try {
-      const { detail, lrcText: text } = await _fetchSongData(targetCid)
-      currentSong.value = _mergeCatalog(detail, targetCid)
-      lrcText.value = text || savedLrc
-    } catch {
-      usingInstrumental.value = !usingInstrumental.value
-      shouldAutoplay.value = false
+
+    // Ensure target is in cache (karaoke mode prefetches it in playSong, but guard anyway)
+    if (!prefetchCache.value[targetCid]) {
+      try { await _fetchSongData(targetCid) } catch { return }
     }
+
+    // Freeze display time now so activeLine / KaraokeDisplay don't flicker during src swap
+    currentTime.value = savedTime
+    usingInstrumental.value = !usingInstrumental.value  // audioSrc recomputes from cache
+    shouldAutoplay.value = wasPlaying
+    pendingSeekTime.value = savedTime  // applied in onCanPlay once new src is ready
+    // currentSong and lrcText are intentionally left unchanged — display stays the same
   }
 
   function seekTo(time) {

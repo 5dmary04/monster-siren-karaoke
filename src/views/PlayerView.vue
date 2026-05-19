@@ -27,6 +27,7 @@
           :activeLine="store.activeLine"
           :currentTime="store.currentTime"
           :duration="store.duration"
+          :playing="store.playing"
           @seek="store.seekTo"
         />
         <LyricDisplay

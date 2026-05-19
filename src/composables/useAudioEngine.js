@@ -10,6 +10,10 @@ export function useAudioEngine() {
   let attached = null
 
   function onTimeUpdate() {
+    // Skip while a pendingSeekTime is queued: the audio's currentTime is unreliable
+    // between a src change and the subsequent canplay + seek, and updating the store
+    // here would cause activeLine to flicker and restart the karaoke animation.
+    if (pendingSeekTime.value !== null) return
     currentTime.value = attached?.currentTime ?? 0
   }
   function onPlay() { playing.value = true }

@@ -9,7 +9,7 @@
         @click="$emit('seek', lines[slotALine].time)"
       >
         <span class="lyric-bg">{{ lines[slotALine].text }}</span>
-        <span v-if="slotASinging" ref="fillA" class="lyric-fill">{{ lines[slotALine].text }}</span>
+        <span v-if="slotASinging" ref="fillA" class="lyric-fill" :style="fillState">{{ lines[slotALine].text }}</span>
       </div>
     </div>
 
@@ -21,7 +21,7 @@
         @click="$emit('seek', lines[slotBLine].time)"
       >
         <span class="lyric-bg">{{ lines[slotBLine].text }}</span>
-        <span v-if="slotBSinging" ref="fillB" class="lyric-fill">{{ lines[slotBLine].text }}</span>
+        <span v-if="slotBSinging" ref="fillB" class="lyric-fill" :style="fillState">{{ lines[slotBLine].text }}</span>
       </div>
     </div>
 
@@ -33,12 +33,18 @@ import { ref, computed, watch, nextTick } from 'vue'
 import { karaokeStyleVars } from '@/composables/useKaraokeStyle'
 
 const props = defineProps({
-  lines:       { type: Array,  default: () => [] },
-  activeLine:  { type: Number, default: -1 },
-  currentTime: { type: Number, default: 0 },
-  duration:    { type: Number, default: 0 },
+  lines:       { type: Array,   default: () => [] },
+  activeLine:  { type: Number,  default: -1 },
+  currentTime: { type: Number,  default: 0 },
+  duration:    { type: Number,  default: 0 },
+  playing:     { type: Boolean, default: true },
 })
 defineEmits(['seek'])
+
+// Bound to both .lyric-fill spans so animation-play-state mirrors audio state
+const fillState = computed(() => ({
+  animationPlayState: props.playing ? 'running' : 'paused',
+}))
 
 const fillA = ref(null)
 const fillB = ref(null)
