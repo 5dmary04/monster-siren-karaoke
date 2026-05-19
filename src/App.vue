@@ -3,6 +3,7 @@
     <RouterView />
     <MiniPlayer v-if="showMini" />
     <audio ref="audioEl" :src="store.audioSrc" preload="auto" style="display:none" />
+    <audio :src="store.pairedAudioSrc" preload="auto" style="display:none" />
   </div>
 </template>
 
@@ -14,7 +15,7 @@ import { useCatalog } from '@/composables/useCatalog'
 import { useAudioEngine } from '@/composables/useAudioEngine'
 import MiniPlayer from '@/components/MiniPlayer.vue'
 
-const IDLE_CID = '779416'  // 梦源之地 — shown paused on first open
+const IDLE_CID = '779484'  // Winged Step — shown paused on first open
 
 const route = useRoute()
 const store = usePlayerStore()

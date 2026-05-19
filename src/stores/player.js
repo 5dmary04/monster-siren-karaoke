@@ -35,6 +35,12 @@ export const usePlayerStore = defineStore('player', () => {
   const parsedLyrics = computed(() => parseLRC(lrcText.value))
   const activeLine = computed(() => findActiveLine(parsedLyrics.value, currentTime.value))
   const instrumentalCid = computed(() => currentSong.value?.pairedCid ?? null)
+  // sourceUrl of the paired track — used by App.vue to preload it in a hidden <audio>
+  const pairedAudioSrc = computed(() => {
+    const cid = instrumentalCid.value
+    if (!cid) return ''
+    return prefetchCache.value[cid]?.detail?.sourceUrl ?? ''
+  })
 
   // --- Actions ---
 
@@ -132,7 +138,7 @@ export const usePlayerStore = defineStore('player', () => {
     audioRef, currentSong, playing, volume, currentTime, duration,
     lrcText, usingInstrumental, shouldAutoplay, pendingSeekTime, loadingDetail, detailError,
     mode, prefetchCache,
-    audioSrc, hasSong, parsedLyrics, activeLine, instrumentalCid,
+    audioSrc, pairedAudioSrc, hasSong, parsedLyrics, activeLine, instrumentalCid,
     setAudioRef, playSong, toggleInstrumental, seekTo, togglePlay, setVolume, setMode,
   }
 })
